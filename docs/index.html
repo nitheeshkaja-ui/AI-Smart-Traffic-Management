@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Traffic Management System | AI Intersection Controller</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <div class="traffic-light-icon">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <div class="brand-text">
+          <h1>Smart Traffic Management System</h1>
+          <p class="subtitle">AI-Driven 4-Way Intersection Simulator &bull; Adaptive Signal Control &bull; PCU Analysis</p>
+        </div>
+      </div>
+
+      <div class="nav-controls">
+        <div class="mode-selector">
+          <label for="modeSelect">Control Mode:</label>
+          <select id="modeSelect">
+            <option value="AUTO_ADAPTIVE" selected>Adaptive AI (Dynamic PCU)</option>
+            <option value="FIXED_TIME">Fixed Cycle (30s Baseline)</option>
+            <option value="MANUAL_OVERRIDE">Manual Override</option>
+          </select>
+        </div>
+
+        <button id="btnBackendToggle" class="btn-backend-toggle" title="Backend Connection Settings">
+          <span>⚙️</span>
+          <span id="backendBtnLabel">Backend Settings</span>
+        </button>
+
+        <div class="system-status-badge" id="statusBadge">
+          <span class="pulse-indicator"></span>
+          <span id="systemStatusText">SIMULATION ONLINE</span>
+        </div>
+
+        <div class="clock-display" id="clockDisplay">00:00:00</div>
+      </div>
+    </header>
+
+    <!-- Emergency Priority Flash Alert Banner -->
+    <div id="emergencyBanner" class="emergency-banner hidden">
+      <div class="emergency-content">
+        <span class="emergency-siren">🚨</span>
+        <div class="emergency-text">
+          <strong>PRIORITY OVERRIDE ACTIVE:</strong>
+          <span id="emergencyLaneText">Ambulance detected on NORTH approach! Clearing signal corridor...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backend Configuration Modal -->
+    <div id="backendModal" class="modal-backdrop hidden">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3><span>🔌</span> Backend API Configuration</h3>
+          <button class="btn-close-modal" id="btnCloseModal" title="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>
+            When hosted on <strong>GitHub Pages</strong>, the frontend can run in <strong>Interactive Standalone Demo Mode</strong> (client-side simulation) or connect to your separately hosted Flask backend.
+          </p>
+          <div class="form-group">
+            <label for="inputBackendUrl">Backend API Base URL:</label>
+            <input type="text" id="inputBackendUrl" class="form-input" placeholder="e.g. https://my-traffic-backend.onrender.com or http://localhost:5050">
+          </div>
+          <div id="modalStatusBox" class="status-box">
+            Status: Detecting backend connection...
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="btnUseDemoMode">Use Standalone Demo</button>
+          <button class="btn-secondary" id="btnTestConnection">Test Connection</button>
+          <button class="btn-primary" id="btnSaveBackendUrl">Save &amp; Connect</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Grid Layout -->
+    <main class="main-layout">
+      <!-- 4-Lane Simulation Feeds Grid -->
+      <section class="camera-grid">
+        <!-- North Approach -->
+        <div class="camera-card" id="card-north">
+          <div class="camera-header">
+            <div class="cam-info">
+              <span class="cam-badge" id="cam-badge-north">NORTH</span>
+              <h3><span id="label-north">North Approach</span> <small id="sub-north">(Direction N)</small></h3>
+            </div>
+            <div class="signal-hud" id="hud-north">
+              <div class="signal-bulb red active"></div>
+              <div class="signal-bulb yellow"></div>
+              <div class="signal-bulb green"></div>
+              <span class="timer-badge" id="timer-north">--s</span>
+            </div>
+          </div>
+          <div class="panel-status-strip">
+            <span class="badge-source sim" id="src-badge-north">Simulation Lane</span>
+            <span class="badge-detector contour" id="det-badge-north">OpenCV Contour</span>
+          </div>
+          <div class="video-container" id="container-north">
+            <canvas class="sim-canvas" id="canvas-north" width="640" height="480"></canvas>
+            <img class="video-stream hidden" id="stream-north" alt="North Lane Simulation">
+            <div class="video-overlay" id="overlay-north"></div>
+          </div>
+          <div class="card-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Vehicles</span>
+              <span class="metric-val" id="cnt-north">0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">PCU Density</span>
+              <span class="metric-val" id="pcu-north">0.0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Congestion</span>
+              <span class="status-pill low" id="cong-north">Low</span>
+            </div>
+          </div>
+          <div class="lane-actions">
+            <button class="btn-action alert-btn" onclick="injectEmergency('north')">🚨 Ambulance</button>
+            <button class="btn-action rush-btn" onclick="toggleRushHour('north')">⚡ Rush Hour</button>
+            <button class="btn-action green-btn" onclick="manualGreen('north')">🟢 Force Green</button>
+          </div>
+        </div>
+
+        <!-- South Approach -->
+        <div class="camera-card" id="card-south">
+          <div class="camera-header">
+            <div class="cam-info">
+              <span class="cam-badge" id="cam-badge-south">SOUTH</span>
+              <h3><span id="label-south">South Approach</span> <small id="sub-south">(Direction S)</small></h3>
+            </div>
+            <div class="signal-hud" id="hud-south">
+              <div class="signal-bulb red active"></div>
+              <div class="signal-bulb yellow"></div>
+              <div class="signal-bulb green"></div>
+              <span class="timer-badge" id="timer-south">--s</span>
+            </div>
+          </div>
+          <div class="panel-status-strip">
+            <span class="badge-source sim" id="src-badge-south">Simulation Lane</span>
+            <span class="badge-detector contour" id="det-badge-south">OpenCV Contour</span>
+          </div>
+          <div class="video-container" id="container-south">
+            <canvas class="sim-canvas" id="canvas-south" width="640" height="480"></canvas>
+            <img class="video-stream hidden" id="stream-south" alt="South Lane Simulation">
+            <div class="video-overlay" id="overlay-south"></div>
+          </div>
+          <div class="card-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Vehicles</span>
+              <span class="metric-val" id="cnt-south">0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">PCU Density</span>
+              <span class="metric-val" id="pcu-south">0.0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Congestion</span>
+              <span class="status-pill low" id="cong-south">Low</span>
+            </div>
+          </div>
+          <div class="lane-actions">
+            <button class="btn-action alert-btn" onclick="injectEmergency('south')">🚨 Ambulance</button>
+            <button class="btn-action rush-btn" onclick="toggleRushHour('south')">⚡ Rush Hour</button>
+            <button class="btn-action green-btn" onclick="manualGreen('south')">🟢 Force Green</button>
+          </div>
+        </div>
+
+        <!-- East Approach -->
+        <div class="camera-card" id="card-east">
+          <div class="camera-header">
+            <div class="cam-info">
+              <span class="cam-badge" id="cam-badge-east">EAST</span>
+              <h3><span id="label-east">East Approach</span> <small id="sub-east">(Direction E)</small></h3>
+            </div>
+            <div class="signal-hud" id="hud-east">
+              <div class="signal-bulb red active"></div>
+              <div class="signal-bulb yellow"></div>
+              <div class="signal-bulb green"></div>
+              <span class="timer-badge" id="timer-east">--s</span>
+            </div>
+          </div>
+          <div class="panel-status-strip">
+            <span class="badge-source sim" id="src-badge-east">Simulation Lane</span>
+            <span class="badge-detector contour" id="det-badge-east">OpenCV Contour</span>
+          </div>
+          <div class="video-container" id="container-east">
+            <canvas class="sim-canvas" id="canvas-east" width="640" height="480"></canvas>
+            <img class="video-stream hidden" id="stream-east" alt="East Lane Simulation">
+            <div class="video-overlay" id="overlay-east"></div>
+          </div>
+          <div class="card-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Vehicles</span>
+              <span class="metric-val" id="cnt-east">0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">PCU Density</span>
+              <span class="metric-val" id="pcu-east">0.0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Congestion</span>
+              <span class="status-pill low" id="cong-east">Low</span>
+            </div>
+          </div>
+          <div class="lane-actions">
+            <button class="btn-action alert-btn" onclick="injectEmergency('east')">🚨 Ambulance</button>
+            <button class="btn-action rush-btn" onclick="toggleRushHour('east')">⚡ Rush Hour</button>
+            <button class="btn-action green-btn" onclick="manualGreen('east')">🟢 Force Green</button>
+          </div>
+        </div>
+
+        <!-- West Approach -->
+        <div class="camera-card" id="card-west">
+          <div class="camera-header">
+            <div class="cam-info">
+              <span class="cam-badge" id="cam-badge-west">WEST</span>
+              <h3><span id="label-west">West Approach</span> <small id="sub-west">(Direction W)</small></h3>
+            </div>
+            <div class="signal-hud" id="hud-west">
+              <div class="signal-bulb red active"></div>
+              <div class="signal-bulb yellow"></div>
+              <div class="signal-bulb green"></div>
+              <span class="timer-badge" id="timer-west">--s</span>
+            </div>
+          </div>
+          <div class="panel-status-strip">
+            <span class="badge-source sim" id="src-badge-west">Simulation Lane</span>
+            <span class="badge-detector contour" id="det-badge-west">OpenCV Contour</span>
+          </div>
+          <div class="video-container" id="container-west">
+            <canvas class="sim-canvas" id="canvas-west" width="640" height="480"></canvas>
+            <img class="video-stream hidden" id="stream-west" alt="West Lane Simulation">
+            <div class="video-overlay" id="overlay-west"></div>
+          </div>
+          <div class="card-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Vehicles</span>
+              <span class="metric-val" id="cnt-west">0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">PCU Density</span>
+              <span class="metric-val" id="pcu-west">0.0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Congestion</span>
+              <span class="status-pill low" id="cong-west">Low</span>
+            </div>
+          </div>
+          <div class="lane-actions">
+            <button class="btn-action alert-btn" onclick="injectEmergency('west')">🚨 Ambulance</button>
+            <button class="btn-action rush-btn" onclick="toggleRushHour('west')">⚡ Rush Hour</button>
+            <button class="btn-action green-btn" onclick="manualGreen('west')">🟢 Force Green</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics & Operations Sidebar -->
+      <aside class="sidebar">
+        <!-- Intersection Performance KPI Panel -->
+        <div class="panel-card">
+          <h2 class="panel-title">Intersection Performance KPIs</h2>
+          <div class="kpi-grid">
+            <div class="kpi-box">
+              <span class="kpi-number" id="kpi-vehicles">0</span>
+              <span class="kpi-name">Total Vehicles</span>
+            </div>
+            <div class="kpi-box">
+              <span class="kpi-number" id="kpi-pcu">0.0</span>
+              <span class="kpi-name">Total PCU Load</span>
+            </div>
+            <div class="kpi-box highlight">
+              <span class="kpi-number" id="kpi-saved">0s</span>
+              <span class="kpi-name">Wait Time Saved</span>
+            </div>
+            <div class="kpi-box">
+              <span class="kpi-number" id="kpi-ev-count">0</span>
+              <span class="kpi-name">Emergency Cleared</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Density Distribution Bars -->
+        <div class="panel-card">
+          <h2 class="panel-title">Dynamic Lane Density (PCU)</h2>
+          <div class="density-bars">
+            <div class="density-row">
+              <div class="density-meta">
+                <span>North Approach</span>
+                <span id="bar-val-north">0.0 PCU</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" id="bar-fill-north" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <div class="density-row">
+              <div class="density-meta">
+                <span>South Approach</span>
+                <span id="bar-val-south">0.0 PCU</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" id="bar-fill-south" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <div class="density-row">
+              <div class="density-meta">
+                <span>East Approach</span>
+                <span id="bar-val-east">0.0 PCU</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" id="bar-fill-east" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <div class="density-row">
+              <div class="density-meta">
+                <span>West Approach</span>
+                <span id="bar-val-west">0.0 PCU</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" id="bar-fill-west" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Agent Activity Logs -->
+        <div class="panel-card">
+          <div class="panel-header-flex">
+            <h2 class="panel-title">AI Decision Event Log</h2>
+            <span class="badge-mini">LIVE</span>
+          </div>
+          <div class="log-stream" id="logStream">
+            <div class="log-entry">Initializing Traffic Decision Engine...</div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div>AI Mini-Capstone Project &bull; College of Engineering &bull; Computer Vision &amp; Simulation Engine</div>
+      <div class="tech-stack-pills">
+        <span>OpenCV Contour</span>
+        <span>Python Flask</span>
+        <span>Adaptive Timing</span>
+        <span>4-Way Simulator</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
