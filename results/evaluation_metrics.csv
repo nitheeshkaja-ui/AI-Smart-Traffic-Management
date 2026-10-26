@@ -1,0 +1,9 @@
+Metric,Traditional Fixed-Time (30s),AI Adaptive Dynamic PCU,Improvement (%)
+Total Waiting Time (veh-sec),24650.0,22056.0,10.5% reduction
+Average Delay per Vehicle (sec),296.99,227.38,23.4% reduction
+Total Vehicles Cleared (Throughput),83,97,+16.9% throughput
+Emergency Clearance Delay (sec),66.0,49.0,25.8% faster
+Queue Wait - North,10064.0,7761.0,
+Queue Wait - South,5129.0,5743.0,
+Queue Wait - East,7018.0,5727.0,
+Queue Wait - West,2439.0,2825.0,

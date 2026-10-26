@@ -1,0 +1,13 @@
+Scenario,Controller,Total Arrivals (Cohort),Total Queue Wait (veh-sec),Avg Wait Arrived - Pooled (s),Avg Wait Arrived - Per-Seed Mean (s),Throughput (Vehicles Cleared),Remaining in Queue (Vehicles),Avg Delay of Cleared Vehicles (s),EV Response Time (s),Max Wait North (s),Max Wait South (s),Max Wait East (s),Max Wait West (s),Normal Starvation Episodes,Normal Exceedance Duration (s),Emergency Starvation Episodes (Total),Emergency Exceedance Duration - Mean per Run (s),Emergency Exceedance Duration - Total Across Seeds (s),Emergency Preemption Max Wait (s)
+Normal Traffic (Balanced),Fixed-Time (20s),204,14155.3,69.39,69.41,89,115,73.16,N/A,74.0,74.0,74.0,74.0,0,0.0,0,0.0,0.0,N/A
+Normal Traffic (Balanced),AI Adaptive (PCU),204,14038.0,68.81,68.83,90,114,72.31,N/A,86.0,82.0,78.3,83.7,0,0.0,0,0.0,0.0,N/A
+Normal Traffic (Balanced),Improvement (%),0.0% (Identical),+0.8%,+0.8%,+0.8%,+1.1%,+0.9%,+1.2%,N/A,,,,,,,,,,
+Heavy Rush-Hour Traffic (Congested),Fixed-Time (20s),427,40247.7,94.26,94.26,93,334,94.74,N/A,74.0,74.0,74.0,74.0,0,0.0,0,0.0,0.0,N/A
+Heavy Rush-Hour Traffic (Congested),AI Adaptive (PCU),427,40317.3,94.42,94.42,93,334,96.56,N/A,83.3,81.7,79.3,79.3,0,0.0,0,0.0,0.0,N/A
+Heavy Rush-Hour Traffic (Congested),Improvement (%),0.0% (Identical),-0.2%,-0.2%,-0.2%,+0.0%,+0.0%,-1.9%,N/A,,,,,,,,,,
+Asymmetric Traffic (1 Heavy / 3 Light),Fixed-Time (20s),202,15352.0,76.00,75.78,79,124,61.81,N/A,74.0,74.0,74.0,74.0,0,0.0,0,0.0,0.0,N/A
+Asymmetric Traffic (1 Heavy / 3 Light),AI Adaptive (PCU),202,14508.7,71.83,71.62,84,119,72.82,N/A,44.7,86.0,88.0,86.3,0,0.0,0,0.0,0.0,N/A
+Asymmetric Traffic (1 Heavy / 3 Light),Improvement (%),0.0% (Identical),+5.5%,+5.5%,+5.5%,+6.3%,+4.0%,-17.8%,N/A,,,,,,,,,,
+Emergency Vehicle Injection (EVPO),Fixed-Time (20s),262,22005.3,83.99,83.86,84,178,77.54,55.3,81.7,88.7,62.0,70.3,0,0.0,0,0.0,0.0,70.3
+Emergency Vehicle Injection (EVPO),AI Adaptive (PCU),262,20643.0,78.79,78.66,91,171,77.52,40.7,74.7,87.0,79.3,123.3,0,0.0,3,33.3,100.0,123.3
+Emergency Vehicle Injection (EVPO),Improvement (%),0.0% (Identical),+6.2%,+6.2%,+6.2%,+8.3%,+3.9%,+0.0%,+26.4%,,,,,,,,,,

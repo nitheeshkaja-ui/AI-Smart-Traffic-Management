@@ -1,0 +1,20 @@
+# AI-Based Smart Traffic Management System Dependencies
+
+# Core Web Framework
+Flask>=3.0.0
+Werkzeug>=3.0.0
+
+# Computer Vision & Deep Learning
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# YOLO Object Detection (Optional but recommended)
+ultralytics>=8.0.0
+
+# Utilities & Scientific Computing
+requests>=2.31.0
+matplotlib>=3.7.0
+scipy>=1.10.0
